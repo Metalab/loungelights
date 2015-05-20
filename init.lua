@@ -67,9 +67,9 @@ end)
 -- Example: 123,,,255, means: white = 123, a,r and b are left unchanged and g = 255 = max.
 -- The characters used for separation don't matter. 123,,,255, is the same as 123:::255: or whatever you prefer.
 -- Values are to be in [0,255]. Larger Values are assumed to be 255 = max.
--- A way to send "delta" values that define a new color by sending an offset to the current color should be implemented BY YOU,
+-- A way to send "delta" values that define a new color by adding an offset to the current color should be implemented BY YOU,
 -- because frankly, I don't give a damn. It might be a practical way to implement the red alert or some other annoying shit.
--- "Deltas" (i.e. "offsets") are to be recognized at the sign (+ or -) at their beginning. 
+-- "Deltas" (i.e. "offsets") are recognized by the sign (+ or -) at their beginning. 
 -- Example: 100,+3,,-4,0     means: w = 100, a = a+3, r unchanged, g = g-4, b = 0.
 
 function parseData(data)
