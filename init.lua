@@ -17,6 +17,7 @@ tmr.alarm(0, 1000, 1, function()
 end)
 
 function startMqttClient()
+    currentLights = {100,200,50,100,255}
     m = mqtt.Client("lights", 120, "lichter", "password")
     m:on("connect", function(con) print ("connected") end)
     m:on("offline", function(con) print ("offline") end)
@@ -58,15 +59,12 @@ function startMqttClient()
     end)
 end
 
-tmr.alarm(5,100,1,function()
-    spi.send(1,{0x10,0x10,0x10})
-end)
 
 -- The expected string is: w,a,r,g,b where w = white, a = amber, r = red, g = green, b = blue.
 -- If left out variable remains at current value.
 -- Example: 123,,,255, means: white = 123, a,r and b are left unchanged and g = 255 = max.
 -- The characters used for separation don't matter. 123,,,255, is the same as 123:::255: or whatever you prefer.
--- Values are to be in [0,255]. Larger Values are assumed to be 255 = max.
+-- Values are to be in [0,255]. Larger Values will crash the module. Input
 -- A way to send "delta" values that define a new color by adding an offset to the current color should be implemented BY YOU,
 -- because frankly, I don't give a damn. It might be a practical way to implement the red alert or some other annoying shit.
 -- "Deltas" (i.e. "offsets") are recognized by the sign (+ or -) at their beginning. 
@@ -78,6 +76,9 @@ function parseData(data)
     num = ""
     vals = {}
     for i = 1, leng, 1 do
+        if color > 5 then
+            break
+        end
         ch = string.sub(data,i,i)
         if tonumber(ch) ~= nil then
             num = num..ch
@@ -90,14 +91,16 @@ function parseData(data)
                 if number > 255 then
                     number = 255
                 end
-                vals[color] = tonumber(num) 
+                vals[color] = number 
                 num = ""
                 color = color + 1
             end 
         end
-        if color > 5 then
-            break
-        end
     end
+    number = tonumber(num)
+    if number > 255 then
+        number = 255
+    end
+    vals[5] = number 
     return vals
 end
