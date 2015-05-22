@@ -97,9 +97,13 @@ function parseData(data)
             end 
         end
     end
-    number = tonumber(num)
-    if number > 255 then
+    if num ~= "" then
+      number = tonumber(num)
+      if number > 255 then
         number = 255
+      end
+    else
+      number = nil
     end
     vals[5] = number 
     return vals
