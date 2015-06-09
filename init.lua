@@ -23,28 +23,28 @@ function startMqttClient()
     m:on("offline", function(con) print ("offline") end)
     m:on("message", function(conn, topic, data)
         print(topic .. ":" )
-            if data ~= nil then
-                print(data)
-                vals = parseData(data)
-                if vals[1] == 0 then
+            if data ~= nil then print(data)
+                currentLights = parseData(data,currentLights)
+
+                if currentLights[1] == 0 then
                     gpio.write(2,gpio.HIGH)
                 end
-                if vals[2] == 0 then
+                if currentLights[2] == 0 then
                     gpio.write(8,gpio.HIGH)
                 end
-                if vals[1] > 0 then
+                if currentLights[1] > 0 then
                     gpio.write(1,gpio.HIGH)
                 end
                 
-                if vals[2] > 0 then
+                if currentLights[2] > 0 then
                     gpio.write(0,gpio.HIGH)
                 end
 
-                pwm.setup(4,1000,vals[1]*4+3)
-                pwm.setup(6,1000,vals[2]*4+3)
+                pwm.setup(4,1000,currentLights[1]*4+3)
+                pwm.setup(6,1000,currentLights[2]*4+3)
                 pwm.start(4)
                 pwm.start(6)
-                spi.send(1,{vals[3],vals[4],vals[5]})
+                spi.send(1,{currentLights[3],currentLights[4],currentLights[5]})
             end 
     end)
 
@@ -60,17 +60,17 @@ function startMqttClient()
 end
 
 
--- The expected string is: w,a,r,g,b where w = white, a = amber, r = red, g = green, b = blue.
+-- The expected string format is: w,a,r,g,b where w = white, a = amber, r = red, g = green, b = blue.
 -- If left out variable remains at current value.
 -- Example: 123,,,255, means: white = 123, a,r and b are left unchanged and g = 255 = max.
--- The characters used for separation don't matter. 123,,,255, is the same as 123:::255: or whatever you prefer.
--- Values are to be in [0,255]. Larger Values will crash the module. Input
+-- Which exact characters are used for separation doesn't matter. 123,,,255, is to interpreted the same as as 123:::255: for instance.
+-- Values are to in [0,255]. Larger Values will be assumed to be 255 = max. 
 -- A way to send "delta" values that define a new color by adding an offset to the current color should be implemented BY YOU,
 -- because frankly, I don't give a damn. It might be a practical way to implement the red alert or some other annoying shit.
 -- "Deltas" (i.e. "offsets") are recognized by the sign (+ or -) at their beginning. 
 -- Example: 100,+3,,-4,0     means: w = 100, a = a+3, r unchanged, g = g-4, b = 0.
 
-function parseData(data)
+function parseData(data,current)
     leng = string.len(data)
     color = 1
     num = ""
@@ -84,7 +84,7 @@ function parseData(data)
             num = num..ch
         else
             if num == "" then
-                vals[color] = nil
+                vals[color] = current[color]
                 color = color + 1
             else
                 number = tonumber(num)
